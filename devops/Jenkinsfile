@@ -2,28 +2,50 @@
   Practica 2
 */
 
-pipeline {  
+pipeline {
   agent any
-  
-  stages {    
+
+  stages {
     stage('Info') {
       steps {
         echo "Job: ${env.JOB_NAME}"
-        echo "build: ${env.BUILD_NUMBER}"
-      }      
+        echo "Build: ${env.BUILD_NUMBER}"
+      }
     }
-    stage('Test') {
+
+    stage('CI Lint') {
       agent {
         docker {
-          image 'python:3.6-slim'
+          image 'python:3.10-slim'
           args '-u root:root'
         }
       }
       steps {
         sh 'python --version'
-        sh 'pip install --upgrade pip' 
-        sh 'pip install pytest'
-        sh 'pytest -q'
+        // instalar herramientas necesarias (temporal)
+        sh 'pip install --upgrade pip'
+        sh 'pip install flake8 || true'
+        sh 'apt-get update && apt-get install -y make'
+        // si tu Makefile llama a flake8, ejecuta make lint
+        sh 'make lint'
+      }
+    }
+
+    stage('CI Test') {
+      agent {
+        docker {
+          image 'python:3.10-slim'
+          args '-u root:root'
+        }
+      }
+      steps {
+        sh 'python --version'
+        sh 'pip install --upgrade pip'
+        // instala dependencias del proyecto
+        sh 'pip install -r requirements.txt || true'
+        sh 'apt-get update && apt-get install -y make'
+        // ejecuta tests definidos en el Makefile
+        sh 'make test'
       }
     }
   }
