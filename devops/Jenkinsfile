@@ -16,11 +16,14 @@ pipeline {
       agent {
         docker {
           image 'python:3.6-slim'
+          args '-u root:root'
         }
       }
       steps {
         sh 'python --version'
-        sh 'echo "Stage dummy. En la Practica 2 ejecutaras aqui los tests unitarios."'
+        sh 'pip install --upgrade pip' 
+        sh 'pip install pytest'
+        sh 'pytest -q'
       }
     }
   }
