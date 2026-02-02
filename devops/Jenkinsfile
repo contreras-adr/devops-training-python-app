@@ -10,19 +10,18 @@ pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
   
-  stages {
-    steps { sh 'python --version' }
+  stages {    
     stage('Test') {
       /*
         `agent` dentro de un stage permite que SOLO ese stage se ejecute en un contexto concreto.
         En este caso, usamos Docker como capa de virtualizacion: los comandos se ejecutan dentro
         de un contenedor temporal.
       */
-      agent {
+      /*agent {
         docker {
           image 'python:3.6-slim'
         }
-      }
+      }*/
       steps {
         sh 'python --version'
         sh 'echo "Stage dummy. En la Practica 2 ejecutaras aqui los tests unitarios."'
