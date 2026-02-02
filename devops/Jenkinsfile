@@ -9,7 +9,7 @@
 pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
-
+  steps { sh 'python --version' }
   stages {
     stage('Test') {
       /*
