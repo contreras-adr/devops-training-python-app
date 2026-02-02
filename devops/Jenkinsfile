@@ -21,6 +21,8 @@ pipeline {
       }
       steps {
         sh 'python --version'
+        sh 'pip install --upgrade pip' 
+        sh 'pip install pytest'
         sh 'pytest -q'
       }
     }
