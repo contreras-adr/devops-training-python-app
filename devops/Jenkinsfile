@@ -1,5 +1,5 @@
 /*
-  Practica 2
+  Practica 2 - versión mejorada (solución rápida)
 */
 
 pipeline {
@@ -17,16 +17,17 @@ pipeline {
       agent {
         docker {
           image 'python:3.10-slim'
-          args '-u root:root'
+          args '-u root:root -v /var/jenkins_home/.cache/pip:/root/.cache/pip'
         }
       }
       steps {
         sh 'python --version'
-        // instalar herramientas necesarias (temporal)
+        // pip y herramientas de lint (agrupadas)
         sh 'pip install --upgrade pip'
-        sh 'pip install flake8 || true'
-        sh 'apt-get update && apt-get install -y make'
-        // si tu Makefile llama a flake8, ejecuta make lint
+        sh 'pip install flake8 pytest || true'
+        // instalar make de forma no interactiva y limpiar listas
+        sh 'export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y --no-install-recommends make && rm -rf /var/lib/apt/lists/*'
+        // ejecutar lint (fallará si hay errores de estilo)
         sh 'make lint'
       }
     }
@@ -35,16 +36,18 @@ pipeline {
       agent {
         docker {
           image 'python:3.10-slim'
-          args '-u root:root'
+          args '-u root:root -v /var/jenkins_home/.cache/pip:/root/.cache/pip -v /var/jenkins_home/.cache/pytest:/root/.cache/pytest'
         }
       }
       steps {
         sh 'python --version'
         sh 'pip install --upgrade pip'
-        // instala dependencias del proyecto
+        // instalar dependencias y herramientas necesarias
         sh 'pip install -r requirements.txt || true'
-        sh 'apt-get update && apt-get install -y make'
-        // ejecuta tests definidos en el Makefile
+        sh 'pip install pytest || true'
+        // instalar make (no persiste entre stages)
+        sh 'export DEBIAN_FRONTEND=noninteractive && apt-get update && apt-get install -y --no-install-recommends make && rm -rf /var/lib/apt/lists/*'
+        // ejecutar tests
         sh 'make test'
       }
     }
