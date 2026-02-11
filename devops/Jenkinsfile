@@ -1,31 +1,84 @@
-/*
-  Practica 2 - Jenkinsfile dummy (PUNTO DE PARTIDA)
-
-  Este Jenkinsfile es intencionalmente simple. En la Practica 2 iras anadiendo
-  piezas (stages, agents, funciones Groovy, Docker build, docker compose, etc.)
-  hasta construir un pipeline CI/CD completo.
-*/
-
 pipeline {
-  // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
+
   agent any
 
+  environment {
+    APP_IMAGE = "python-app:ci"
+  }
+
   stages {
-    stage('Test') {
-      /*
-        `agent` dentro de un stage permite que SOLO ese stage se ejecute en un contexto concreto.
-        En este caso, usamos Docker como capa de virtualizacion: los comandos se ejecutan dentro
-        de un contenedor temporal.
-      */
+
+    /* =========================
+       CI
+       ========================= */
+
+    stage('CI - Unit tests') {
       agent {
         docker {
           image 'python:3.6-slim'
         }
       }
       steps {
-        sh 'python --version'
-        sh 'echo "Stage dummy. En la Practica 2 ejecutaras aqui los tests unitarios."'
+        sh '''
+          python --version
+          pip install -r requirements.txt
+          pytest
+        '''
+      }
+    }
+
+    stage('CI - Docker build') {
+      steps {
+        sh '''
+          docker build -t ${APP_IMAGE} -f devops/Dockerfile .
+        '''
+      }
+    }
+
+    /* =========================
+       CD (solo ramas principales)
+       ========================= */
+
+    stage('CD - Deploy (docker compose)') {
+      when {
+        anyOf {
+          branch 'develop'
+          branch 'master'
+        }
+      }
+      steps {
+        sh '''
+          docker compose up -d
+        '''
+      }
+    }
+
+    stage('CD - E2E test') {
+      when {
+        anyOf {
+          branch 'develop'
+          branch 'master'
+        }
+      }
+      steps {
+        sh '''
+          sleep 5
+          curl -f http://localhost:5001
+        '''
       }
     }
   }
+
+  /* =========================
+     LIMPIEZA
+     ========================= */
+
+  post {
+    always {
+      sh '''
+        docker compose down --volumes || true
+      '''
+    }
+  }
 }
+
