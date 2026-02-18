@@ -13,18 +13,55 @@ pipeline {
   stages {
 
      // ejercicio 2
-   stage('Test-Puthon') {
-     agent {
-       docker {
-         image 'python:3.6-slim' 
-       }
-     }
-     steps {
-       sh 'python --version' 
-       sh 'pip install --upgrade pip' 
-       sh 'pip install -r requirements.txt'
-       sh 'pytest -q' }
-   }
+ //  stage('Test-Python') {
+   //  agent {
+     //  docker {
+     //    image 'python:3.6-slim' 
+       //}
+//     }
+ //    steps {
+  //     sh 'python --version' 
+  ///     sh 'pip install --upgrade pip' 
+  //     sh 'pip install -r requirements.txt'
+   //    sh 'pytest -q' }
+ //  }
+    // =========================
+    // Ejercicio 3 - Build CI image 
+    // ========================= 
+    stage('CI - Build tools image') { 
+      steps { 
+        script {
+          env.CI_IMAGE_NAME = "python-ci-tools:${env.BUILD_NUMBER}" 
+          docker.build(env.CI_IMAGE_NAME, "-f devops/ci.Dockerfile .")
+        }
+      } 
+    } 
+    // ========================= 
+    // Ejercicio 3 - Lint 
+    // ========================= 
+    stage('CI - Lint') { 
+      steps {
+        script { 
+          docker.image(env.CI_IMAGE_NAME).inside {
+            sh 'pip install -r requirements.txt flake8 mypy' 
+            sh 'make lint' 
+          } 
+        } 
+      } 
+    } 
+    // ========================= 
+    // Ejercicio 3 - Test 
+    // ========================= 
+    stage('CI - Test') { 
+      steps { 
+        script {
+          docker.image(env.CI_IMAGE_NAME).inside {
+            sh 'pytest -q' 
+          } 
+        } 
+      } 
+    }
+      
     stage('Test') {
       /*
         `agent` dentro de un stage permite que SOLO ese stage se ejecute en un contexto concreto.
