@@ -27,6 +27,17 @@ pipeline {
         sh 'echo "Stage dummy. En la Practica 2 ejecutaras aqui los tests unitarios."'
       }
     }
+    // ejercicio 2
+    stage('CI - Test') {
+      steps {
+        script { 
+          docker.image(env.CI_IMAGE_NAME).inside {
+            sh 'pip install -r requirements.txt' 
+            sh 'pytest -q' 
+          } 
+        } 
+      } 
+    }
        stage('Info') {
             steps { 
                 echo "Job: ${env.JOB_NAME}"
