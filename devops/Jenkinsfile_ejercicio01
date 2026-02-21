@@ -1,0 +1,16 @@
+/*
+  Ejercicio 1
+*/
+
+pipeline {
+  agent any
+
+  stages {
+    stage('Info') {
+      steps {
+        echo "Job: ${env.JOB_NAME}"
+        echo "Build: ${env.BUILD_NUMBER}"
+      }
+    }
+  }
+}
