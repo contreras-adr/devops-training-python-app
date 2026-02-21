@@ -1,0 +1,22 @@
+/*
+Ejercicio 2. Usar docker como agente en un stage
+*/
+
+pipeline {
+  // `agent none` = Para que pipeline se ejecute en el docker que se indica en el stage
+  agent none
+
+  stages {
+    stage('Test') {
+      agent {
+        docker {
+          image 'python:3.6-slim'
+        }
+      }
+      steps {
+        // Ejecutamos los test en pytest
+        sh 'python -m pytest tests/'
+      }
+    }
+  }
+}
