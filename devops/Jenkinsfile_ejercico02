@@ -15,9 +15,8 @@ pipeline {
       }
       steps {
         // Instalamos la herramientas de testing pytest
-        sh 'pip install --user pytest'
-            }
-      steps {
+        sh 'pip install pytest'
+
         // Ejecutamos los test en pytest
         sh 'python -m pytest tests/'
       }
