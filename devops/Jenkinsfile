@@ -1,25 +1,57 @@
 /*
-Ejercicio 2. Usar docker como agente en un stage
+Ejercicio 3
 */
 
 pipeline {
-  // `agent none` = Para que pipeline se ejecute en el docker que se indica en el stage
-  agent none
+agent any
 
-  stages {
-    stage('Test') {
-      agent {
-        docker {
-          image 'python:3.6-slim'
+stages {
+    stage('Construimos la imagen') {
+        steps {
+            // Construimos la imagen usando el Dockerfile
+            sh 'docker build -t mi-ci-image -f devops/ci.Dockerfile .'
         }
-      }
-      steps {
-        // Instalamos la herramientas de testing pytest
-        sh 'pip install pytest'
-
-        // Ejecutamos los test en pytest
-        sh 'python -m pytest tests/'
-      }
     }
-  }
+
+    stage('Instalar Dependencias') {
+        agent {
+            docker {
+                image 'mi-ci-image'
+                // Necesitamos usar el mismo nodo porque si lo vuelve a crear más adelante y faltarian las dependencias
+                reuseNode true 
+            }
+        }
+        steps {
+            // Instalamos las dependencias
+            sh 'pip install -r requirements.txt flake8 mypy'
+        }
+    }
+
+    stage('Lint') {
+        agent {
+            docker {
+                image 'mi-ci-image'
+                reuseNode true
+            }
+        }
+        steps {
+            // Ejecuta el linting
+            sh 'make lint'
+        }
+    }
+
+    stage('Test') {
+        agent {
+            docker {
+                image 'mi-ci-image'
+                reuseNode true
+            }
+        }
+        steps {
+            // Tests unitarios
+            sh 'pytest -q'
+        }
+    }
+}
+
 }
