@@ -1,53 +1,53 @@
 pipeline {
-agent any
-
-stages {
-    stage('Construimos la imagen') {
-        steps {
-            // Construimos la imagen usando el Dockerfile
-            sh 'docker build -t mi-ci-image -f devops/ci.Dockerfile .'
-        }
-    }
-
-    stage('Instalar Dependencias') {
-        agent {
-            docker {
-                image 'mi-ci-image'
-                // Necesitamos usar el mismo nodo porque si lo vuelve a crear más adelante y faltarian las dependencias
-                reuseNode true 
+    agent any
+    
+    stages {
+        stage('Construimos la imagen') {
+            steps {
+                // Construimos la imagen usando el Dockerfile
+                sh 'docker build -t mi-ci-image -f devops/ci.Dockerfile .'
             }
         }
-        steps {
-            // Instalamos las dependencias
-            sh 'pip install -r requirements.txt flake8 mypy'
-        }
-    }
-
-    stage('Lint') {
-        agent {
-            docker {
-                image 'mi-ci-image'
-                reuseNode true
+    
+        stage('Instalar Dependencias') {
+            agent {
+                docker {
+                    image 'mi-ci-image'
+                    // Necesitamos usar el mismo nodo porque si lo vuelve a crear más adelante y faltarian las dependencias
+                    reuseNode true 
+                }
+            }
+            steps {
+                // Instalamos las dependencias
+                sh 'pip install -r requirements.txt flake8 mypy'
             }
         }
-        steps {
-            // Ejecuta el linting
-            sh 'make lint'
-        }
-    }
-
-    stage('Test') {
-        agent {
-            docker {
-                image 'mi-ci-image'
-                reuseNode true
+    
+        stage('Lint') {
+            agent {
+                docker {
+                    image 'mi-ci-image'
+                    reuseNode true
+                }
+            }
+            steps {
+                // Ejecuta el linting
+                sh 'make lint'
             }
         }
-        steps {
-            // Tests unitarios
-            sh 'pytest -q'
+    
+        stage('Test') {
+            agent {
+                docker {
+                    image 'mi-ci-image'
+                    reuseNode true
+                }
+            }
+            steps {
+                // Tests unitarios
+                sh 'pytest -q'
+            }
         }
     }
-}
 
 }
